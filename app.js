@@ -20,37 +20,59 @@
       // Initialize with sample jobs if empty
       if (this.jobs.length === 0) {
         this.jobs = [
-          { 
-            id: '1', 
-            title: 'Campus Ambassador', 
-            company: 'TechStart Inc.', 
-            location: 'Remote', 
-            type: 'Part-time', 
-            description: 'Represent TechStart on campus and help promote our products to fellow students. Responsibilities include organizing events, social media promotion, and gathering feedback.', 
-            postedBy: 'admin@campus.edu', 
+          {
+            id: '1',
+            title: 'Registered Nurse',
+            company: 'HealthCare Plus',
+            location: 'Los Angeles, CA',
+            type: 'Full-time',
+            description: 'Provide patient care, administer medications, and collaborate with healthcare teams to ensure quality treatment.',
+            postedBy: 'hr@healthcareplus.com',
             postedDate: new Date().toISOString(),
             isExternal: false
           },
-          { 
-            id: '2', 
-            title: 'Research Assistant', 
-            company: 'University Labs', 
-            location: 'On Campus', 
-            type: 'Part-time', 
-            description: 'Assist professors with academic research projects. Requires strong organizational skills and attention to detail. Flexible hours available.', 
-            postedBy: 'professor@university.edu', 
+          {
+            id: '2',
+            title: 'Software Engineer',
+            company: 'Innovatech Solutions',
+            location: 'San Francisco, CA',
+            type: 'Full-time',
+            description: 'Develop and maintain web applications, collaborate with cross-functional teams, and implement new features.',
+            postedBy: 'jobs@innovatech.com',
             postedDate: new Date(Date.now() - 86400000 * 2).toISOString(),
             isExternal: false
           },
-          { 
-            id: '3', 
-            title: 'Web Developer Intern', 
-            company: 'Digital Solutions', 
-            location: 'Downtown Office (Hybrid)', 
-            type: 'Internship', 
-            description: 'Summer internship for computer science students. Work on real client projects using modern web technologies. Mentorship provided.', 
-            postedBy: 'hr@digitalsolutions.com', 
+          {
+            id: '3',
+            title: 'Logistics Coordinator',
+            company: 'Global Freight',
+            location: 'Chicago, IL',
+            type: 'Full-time',
+            description: 'Manage shipping schedules, coordinate with carriers, and ensure timely delivery of goods.',
+            postedBy: 'contact@globalfreight.com',
             postedDate: new Date(Date.now() - 86400000 * 5).toISOString(),
+            isExternal: false
+          },
+          {
+            id: '4',
+            title: 'Marketing Specialist',
+            company: 'Bright Ideas Agency',
+            location: 'New York, NY',
+            type: 'Part-time',
+            description: 'Plan and execute marketing campaigns, analyze market trends, and create engaging content.',
+            postedBy: 'marketing@brightideas.com',
+            postedDate: new Date(Date.now() - 86400000 * 7).toISOString(),
+            isExternal: false
+          },
+          {
+            id: '5',
+            title: 'Manufacturing Technician',
+            company: 'Precision Manufacturing',
+            location: 'Detroit, MI',
+            type: 'Full-time',
+            description: 'Operate machinery, perform quality checks, and maintain production schedules.',
+            postedBy: 'hr@precisionmfg.com',
+            postedDate: new Date(Date.now() - 86400000 * 10).toISOString(),
             isExternal: false
           }
         ];
@@ -130,11 +152,17 @@
       return Math.ceil(this.filteredJobs.length / this.jobsPerPage);
     },
 
-    async fetchJobsFromAPI(query = 'student', location = '') {
+    /**
+     * Fetch jobs from external API using RapidAPI jsearch endpoint.
+     * Note: You need a valid RapidAPI key to use this feature.
+     * Replace 'YOUR_RAPIDAPI_KEY_HERE' with your own API key.
+     * You can get a free API key by signing up at https://rapidapi.com/
+     */
+    async fetchJobsFromAPI(query = 'developer jobs in chicago', location = '') {
       showLoader(true);
       try {
         const response = await fetch(
-          `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}%20student%20job&num_pages=1&location=${encodeURIComponent(location)}`,
+          `https://jsearch.p.rapidapi.com/search?query=developer%20jobs%20in%20chicago&page=1&num_pages=1&country=us&date_posted=all`,
           {
             method: 'GET',
             headers: {
@@ -495,6 +523,41 @@
     }, 1500);
   }
 
+  // --- Open Apply Modal ---
+  function openApplyModal(jobId) {
+    if (!state.currentUser) {
+      showAlert('Please login to apply for jobs.', 'error');
+      openModal('loginModal');
+      return;
+    }
+    
+    const job = state.jobs.find(j => j.id === jobId);
+    if (!job) {
+      showAlert('Job not found', 'error');
+      return;
+    }
+
+    state.applyingJobId = jobId;
+    document.getElementById('applyModalTitle').textContent = `Apply to Job: ${job.title}`;
+    document.getElementById('applyModalDesc').textContent = `${job.company} • ${job.location} • ${job.type}`;
+
+    // Pre-fill user info if available
+    const user = state.users[state.currentUser];
+    if (user) {
+      document.getElementById('applicantName').value = user.name || state.currentUser.split('@')[0];
+      document.getElementById('applicantEmail').value = state.currentUser;
+    } else {
+      document.getElementById('applicantName').value = '';
+      document.getElementById('applicantEmail').value = '';
+    }
+
+    // Clear previous inputs
+    document.getElementById('resumeUpload').value = '';
+    document.getElementById('applicantMessage').value = '';
+
+    openModal('applyModal');
+  }
+
   function postJob() {
     const title = document.getElementById('jobTitle').value.trim();
     const company = document.getElementById('company').value.trim();
@@ -700,4 +763,53 @@
     if (state.currentUser) {
       onLogin();
     }
+
+    // Run critical-path tests after initialization
+    runCriticalPathTests();
   });
+
+  // --- Testing Functions ---
+  function runCriticalPathTests() {
+    console.group('Critical Path Tests');
+
+    // Test 1: Jobs array is populated
+    if (state.jobs && state.jobs.length > 0) {
+      console.log('Test 1 Passed: Jobs array is populated with', state.jobs.length, 'jobs.');
+    } else {
+      console.error('Test 1 Failed: Jobs array is empty.');
+    }
+
+    // Test 2: Render jobs populates jobsList container
+    renderJobs();
+    const jobsList = document.getElementById('jobsList');
+    if (jobsList && jobsList.children.length > 0) {
+      console.log('Test 2 Passed: jobsList container has', jobsList.children.length, 'job cards.');
+    } else {
+      console.error('Test 2 Failed: jobsList container is empty after renderJobs.');
+    }
+
+    // Test 3: Pagination buttons exist if needed
+    const pagination = document.getElementById('pagination');
+    if (pagination) {
+      if (pagination.children.length > 0) {
+        console.log('Test 3 Passed: Pagination buttons rendered.');
+      } else {
+        console.warn('Test 3 Warning: No pagination buttons rendered (may be okay if only one page).');
+      }
+    } else {
+      console.error('Test 3 Failed: Pagination container not found.');
+    }
+
+    console.groupEnd();
+  }
+
+  // --- Utility to clear saved jobs data and reload ---
+  function clearJobsData() {
+    localStorage.removeItem('jobs');
+    localStorage.removeItem('filteredJobs');
+    localStorage.removeItem('applications');
+    localStorage.removeItem('users');
+    localStorage.removeItem('currentUser');
+    console.log('LocalStorage job data cleared. Reloading page...');
+    location.reload();
+  }
